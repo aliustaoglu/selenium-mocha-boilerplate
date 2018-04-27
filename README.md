@@ -1,18 +1,21 @@
-# End to end testing with Selenium, mocha and chai
+# End to End Javascript testing with Selenium, Mocha and Chai
+
+Related article:
+http://cuneyt.aliustaoglu.biz/en/end-to-end-javascript-testing-with-selenium-mocha-chai/
 
 Setting up the environment for automation testing is actually not that hard. I'm not going to tell how useful TDD approach is. I'll cut it short and tell you how to set up the a simple boilerplate that could be extended for everyone's needs.
 
 ### Components
 
-*chromedriver* : We won't be using this library directly but selenium-webdriver will.
+**chromedriver** : We won't be using this library directly but selenium-webdriver will.
 
-*selenium-webdriver* : We need this to open up the Chrome browser, send some keys to input elements (eg. '#username') and send clicks to buttons etc.
+**selenium-webdriver** : We need this to open up the Chrome browser, send some keys to input elements (eg. '#username') and send clicks to buttons etc.
 
-*mocha* : This is the testing framework for TDD. We need it to describe and execute tests.
+**mocha** : This is the testing framework for TDD. We need it to describe and execute tests.
 
-*chai* : This is our assertion library. We will execute some code manipulating selenium-webdriver. Selenium will execute these and send us the result. We will check if this result matches our result with `chai`. Chai will signal `mocha` if the tests passed or failed.
+**chai** : This is our assertion library. We will execute some code manipulating selenium-webdriver. Selenium will execute these and send us the result. We will check if this result matches our result with `chai`. Chai will signal `mocha` if the tests passed or failed.
 
-*chai-as-expected* : Chai is not pretty good for asyncronous requests. You might be thinking that reading a value from a DOM element is not asyncronous. For example $('#username') in jQuery is syncronous but the similar request in selenium-webdriver is not syncronous. Webdriver returns a promise, not the actual response. This plugin will help us to use assertion commands on promises.
+**chai-as-expected** : Chai is not pretty good for asyncronous requests. You might be thinking that reading a value from a DOM element is not asyncronous. For example $('#username') in jQuery is syncronous but the similar request in selenium-webdriver is not syncronous. Webdriver returns a promise, not the actual response. This plugin will help us to use assertion commands on promises.
 
 So let's install these libraries and save as dev dependencies.
 
@@ -20,16 +23,17 @@ So let's install these libraries and save as dev dependencies.
 npm install --save-dev chromedriver selenium-webdriver mocha chai chai-as-promised
 ```
 
+
 ### Sample App
 
-We need a simple web app to execute some tests on. I don't want to setup a whole React App that will install lots of dependencies. I'll create the simples express.js app using node.
+We need a simple web app to execute some tests on. I don't want to setup a whole React App that will install lots of dependencies. I'll create the simplest express.js app using node.
 
 ```sh
 npm install --save express
 ```
 
+and then create below application. The application starts with login page. When you enter your username and password (there is no verification for the sake of simplicity) it will take you to the main page. 
 
-and create below application. The application starts with login page. When you enter your username and password (there is no verification for the sake of simplicity) it will take you to the main page. 
 
 ```javascript
 const express = require('express');
@@ -63,33 +67,37 @@ app.get('/main', (req, res) => {
 });
 
 app.listen(3003, () => console.log('Example app listening on port 3003!'));
+
 ```
 
-Added below to package.json
+
+Add below to package.json. Default timeout of 2 seconds is too low for mocha so I changed it to 20,000 milliseconds.
 
 ```json
 {
   "scripts": {
     "start": "node index.js",
-    "test:e2e": "./node_modules/mocha/bin/mocha e2e/tests.js"
+    "test:e2e": "mocha --timeout 20000 e2e/tests.js"
   }
 }
 ```
 
-and run `npm start`
 
-Now we will write our tests. Like express app, our tests are also an node application.
+and run `npm start` and let the application run while we execute the tests.
+
+Now we will write our tests. Like express app, our tests are also a node application. Create below file (e2e/tests.js)
 
 ```javascript
+require('chromedriver');
 const webdriver = require('selenium-webdriver');
 const { By, until } = webdriver;
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-chai.use(chaiAsPromised);
-const expect = chai.expect;
 
+chai.use(chaiAsPromised);
 const driver = new webdriver.Builder().forBrowser('chrome').build();
+const expect = chai.expect;
 
 describe('End to End Test Suite', done => {
   before(done => {
@@ -110,9 +118,8 @@ describe('End to End Test Suite', done => {
 
   it('can read welcome message', () => {
     console.log('Ready to read welcome message');
-    return expect(driver.findElement(By.id('message')).getAttribute('innerHTML')).to.eventually.contain(
-      'Welcome to my page!'
-    );
+    return expect(driver.findElement(By.id('message')).getAttribute('innerHTML'))
+    .to.eventually.contain('Welcome to my page!');
   });
 });
 
@@ -122,6 +129,21 @@ I want to make sure that I have logged into the system so I can test main page. 
 
 Code is pretty self explanatory. Selenium webdriver works similar to jquery. But it does not return the value or function of a DOM element. It returns a promise. That's why I used chai-as-expected plugin.
 
-Also I want to make sure that my DOM element <div id="message" /> is loaded. So I make Selenium to wait until this element is located in the DOM.
+Also I want to make sure that my DOM element &lt;div id="message" /&gt; is loaded. So I make Selenium to wait until this element is located in the DOM.
 
 Now ready to do assertion test. Now we've extended `expect` function of chai. So this point is SUPER SUPER important. Notice that we RETURN the `expect` command we do not just execute it as we normally do in our unit tests. If you don't return it. Your testing software will fail, not your test case. 
+
+```sh
+npm run test:e2e
+```
+
+And here is my first automation test for a very simple express.js application.
+
+![Test Results](http://cuneyt.aliustaoglu.biz/en/content/images/2018/04/Screen-Shot-2018-04-27-at-23.21.49.png)
+
+You can get this example by:
+
+```sh
+https://github.com/aliustaoglu/selenium-mocha-boilerplate.git
+```
+
