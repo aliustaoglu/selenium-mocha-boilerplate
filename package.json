@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "mocha e2e/tests.js"
+    "test:e2e": "mocha --timeout 20000 e2e/tests.js"
   },
   "repository": {
     "type": "git",

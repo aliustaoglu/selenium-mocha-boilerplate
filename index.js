@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
   `);
 });
 
-app.get('/main', (req, res)=> {
+app.get('/main', (req, res) => {
   res.send(`
     <html>
     <title>
@@ -25,7 +25,7 @@ app.get('/main', (req, res)=> {
     </div>
     </body>
     </html>
-  `)
-})
+  `);
+});
 
 app.listen(3003, () => console.log('Example app listening on port 3003!'));
